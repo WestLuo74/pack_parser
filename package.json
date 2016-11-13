@@ -1,0 +1,23 @@
+{
+  "name": "pack_parser",
+  "version": "1.0.0",
+  "description": "A nodejs module for pack or unpack nodejs Buffer with specified format, can be used in tcp or udp binary protocol pack or unpack, or formated binary file pack or unpack.",
+  "main": "pack_parse.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "nodejs test/test_pack_parse.js"
+  },
+  "keywords": [
+    "pack",
+    "unpack",
+    "tcp",
+    "udp",
+    "protocol",
+    "binary",
+    "Buffer"
+  ],
+  "author": "west_luo",
+  "license": "GPL-3.0"
+}
