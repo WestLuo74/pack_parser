@@ -10,7 +10,6 @@ var TypeInfos={
     ushort:{name:'UInt16', size:2},
     UInt32:{name:'UInt32', size:4},
     uint32:{name:'UInt32', size:4},
-    uint32:{name:'UInt32', size:4},
     
     int8:{name:'Int8', size:1},
     int8:{name:'Int8', size:1},
@@ -82,7 +81,7 @@ var Writer = function(){
         if(len == undefined)
             len = typeInfo.size;
         
-        if(typeName == 'string')
+        if(typeName == 'string' || ((typeName == 'fstring') && (len == undefined)))
             len = Buffer.byteLength(val, _encoding);
 
         _targetList.push( {typeInfo:typeInfo, data:val, len:len} );
@@ -215,7 +214,7 @@ var Reader = function(srcBuffer){
             _result[fieldName] = _srcBuffer.toString(_encoding, _offset, _offset + _offset);
         }else if(typeInfo.name == 'fstring'){ //fixed length string, 定长字符串，空余部分填0
                
-            var strlen = 0;//实际长度
+            var strlen = 0;//实际长度            
             for(var i = _offset; i<_offset +len; i++){
                 
                 if(_srcBuffer[i] == 0)

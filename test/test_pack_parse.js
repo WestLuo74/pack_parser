@@ -25,7 +25,6 @@ var funclist =
  "ushort",
  "UInt32",
  "uint32",
- "uint32",
  "int8",
  "int8",
  "Int16",

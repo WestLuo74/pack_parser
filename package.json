@@ -9,6 +9,11 @@
   "scripts": {
     "test": "nodejs test/test_pack_parse.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WestLuo74/pack_parser.git"
+  },
+
   "keywords": [
     "pack",
     "unpack",
@@ -19,5 +24,9 @@
     "Buffer"
   ],
   "author": "west_luo",
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/WestLuo74/pack_parser/issues"
+  },
+  "homepage": "https://github.com/WestLuo74/pack_parser#readme"
 }
