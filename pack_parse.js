@@ -78,12 +78,13 @@ var Writer = function(){
             return;            
         } 
         
-        if(len == undefined)
+        if(len == undefined){
+            
+            if(typeName == 'string' || (typeName == 'fstring'))
+                len = Buffer.byteLength(val, _encoding);
+        }else
             len = typeInfo.size;
         
-        if(typeName == 'string' || ((typeName == 'fstring') && (len == undefined)))
-            len = Buffer.byteLength(val, _encoding);
-
         _targetList.push( {typeInfo:typeInfo, data:val, len:len} );
         return self;
     };
