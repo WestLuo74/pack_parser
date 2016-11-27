@@ -52,8 +52,12 @@ var Writer = function(){
     var _endian = 'B';
     var self = this;
     
+    this.getEncoding = function(){
+        return _encoding;
+    };
+    
     //指定文字编码
-    this.encoding = function(encode){
+    this.setEncoding = function(encode){
         _encoding = encode;
         return this;
     };
@@ -178,8 +182,12 @@ var Reader = function(srcBuffer){
         return this;
     };
     
+    this.getEncoding = function(){
+        return _encoding;
+    };
+    
     //指定文字编码
-    this.encoding = function(encode){
+    this.setEncoding = function(encode){
         _encoding = encode;
         return this;
     };
