@@ -82,8 +82,9 @@ var Writer = function(){
             
             if(typeName == 'string' || (typeName == 'fstring'))
                 len = Buffer.byteLength(val, _encoding);
-        }else
-            len = typeInfo.size;
+            else
+                len = typeInfo.size;
+        }
         
         _targetList.push( {typeInfo:typeInfo, data:val, len:len} );
         return self;
