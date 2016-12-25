@@ -100,10 +100,38 @@ for(var i in funclist){
 var out = Reader.unpack();
 console.log(out);
 
-var pack = writer.fstring('1234567890123', 10).pack();
-var out = Reader.set(pack).fstring('fstr_name', 10).unpack();
+var pack = writer.fstring('1234', 10).bigEndian().pack();
+console.log(pack);
+var out = Reader.set(pack).fstring('fstr_name', 10).bigEndian().unpack();
 console.log(out);
 
-var pack = writer.string('1234567890123').pack();
-var out = Reader.set(pack).string('str_name').unpack();
+
+var pack = writer.fstring('1234567890123', 10).bigEndian().pack();
+console.log(pack);
+var out = Reader.set(pack).fstring('fstr_name', 10).bigEndian().unpack();
 console.log(out);
+
+var pack = writer.string('1234567890123').bigEndian().pack();
+console.log(pack);
+var out = Reader.set(pack).string('str_name').bigEndian().unpack();
+console.log(out);
+
+var testBuff = new Buffer("abcdef");
+var pack = writer.buffer(testBuff).fstring('1234').pack();
+console.log(pack);
+var out = Reader.set(pack).buffer('buffer_name', 6).fstring('fstring_name', 4).bigEndian().unpack();
+console.log(out);
+
+var testBuff = new Buffer("abcd");
+var pack = writer.buffer(testBuff, 10).fstring('1234', 10).pack();
+console.log(pack);
+var out = Reader.set(pack).buffer('buffer_name', 10).fstring('fstring_name', 10).bigEndian().unpack();
+console.log(out);
+
+var testBuff = new Buffer("abcdefghijklmopqrst");
+var pack = writer.buffer(testBuff, 10).fstring('123456789012345', 10).pack();
+console.log(pack);
+var out = Reader.set(pack).buffer('buffer_name', 10).fstring('fstring_name', 10).bigEndian().unpack();
+console.log(out);
+
+
