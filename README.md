@@ -134,6 +134,40 @@ bigEndian() & littleEndian() set number encoding mode: big endian or little endi
 ### setEncoding() & getEncoding()
 setEncoding() & getEncoding() set/get string encoding mode such as 'utf8', 'ascii', 'hex', 'base64', etc., the more detail can reference to nodeJs docment for Buffer: Buffers and Character Encodings.
 
+### set() & append() for Reader
+The Reader function set() will clear Reader object and set source data object to Reader. And append() will append a buffer to source data.
+```js
+reader.set(Buffer)
+
+reader.append(Buffer)
+```
+
+### unpackWithDescTable() for Reader
+Reader unpack with description table. 
+Description table is a array of description, each description must has 'name', 'type' field, and 'length' for fstring or buffer field. 
+Example is as following:
+```js
+console.log(pack);
+
+var descTable = [
+     {name: 'field0', type: 'uint16'},
+     {name: 'field1', type: 'fstring', length: 10},
+     {name: 'field3', type: 'string'},
+     {name: 'field4', type: 'uint32'}
+    ];
+
+reader.set(pack).bigEndian().unpackWithDescTable(descTable);
+```
+
+Output as following:  
+```
+<Buffer 00 0a 31 32 33 34 35 36 37 38 39 30 00 00 00 0d 31 32 33 34 35 36 37 38 39 30 31 32 33 00 00 00 64>
+{ field0: 10,
+  field1: '1234567890',
+  field3: '1234567890123',
+  field4: 100 
+}
+```
 
 # stream_reader
 ## Install

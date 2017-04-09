@@ -1,49 +1,42 @@
 
 var TypeInfos={
-    //本表格为pack_parse的Reader和Writer要提供的函数表
-    //字段名byte、ushort等为最终要提供的函数名，name对应 Nodejs的Buffer类提供的标准编解码函数，size为数据所占字节数。
-    UInt8:{name:'UInt8', size:1},
-    byte:{name:'UInt8', size:1},
-    uint8:{name:'UInt8', size:1},
-    UInt16:{name:'UInt16', size:2},
-    uint16:{name:'UInt16', size:2},
-    ushort:{name:'UInt16', size:2},
-    UInt32:{name:'UInt32', size:4},
-    uint32:{name:'UInt32', size:4},
+    //This is a funtion table for Reader and Write of pack_parse.
+    //The field name is function name of Reader and Writer object.
+    //The bufferFunc is corresponding to reading or writting functions of BuFfer class of Nodejs.
+    //The size is the length in byte of the fixed length data type
+    UInt8:{bufferFunc:'UInt8', size:1},
+    byte:{bufferFunc:'UInt8', size:1},
+    uint8:{bufferFunc:'UInt8', size:1},
+    UInt16:{bufferFunc:'UInt16', size:2},
+    uint16:{bufferFunc:'UInt16', size:2},
+    ushort:{bufferFunc:'UInt16', size:2},
+    UInt32:{bufferFunc:'UInt32', size:4},
+    uint32:{bufferFunc:'UInt32', size:4},
     
-    Int8:{name:'Int8', size:1},
-    int8:{name:'Int8', size:1},
-    Int16:{name:'Int16', size:2},
-    int16:{name:'Int16', size:2},
-    short:{name:'Int16', size:2},
-    Int32:{name:'Int32', size:4},
-    int32:{name:'Int32', size:4},
+    Int8:{bufferFunc:'Int8', size:1},
+    int8:{bufferFunc:'Int8', size:1},
+    Int16:{bufferFunc:'Int16', size:2},
+    int16:{bufferFunc:'Int16', size:2},
+    short:{bufferFunc:'Int16', size:2},
+    Int32:{bufferFunc:'Int32', size:4},
+    int32:{bufferFunc:'Int32', size:4},
 
-/* Buffer提供的Int编码函数需要带byteLength，应该是作为可变长度的整数的写入，暂时不适应
-    buf.writeUIntBE(value, offset, byteLength[, noAssert])
-        byteLength <Number> 0 < byteLength <= 6
-    UInt:{name:'UInt', size:4},
-    uint:{name:'UInt', size:4},
-    Int:{name:'Int', size:4},
-    int:{name:'Int', size:4},
+/* 64bit integer is some problem, Nodjs Buffer does not provide reading or writting function
+    UInt64:{bufferFunc:'Double', size:8},
+    uint64:{bufferFunc:'Double', size:8},
+    Int64:{bufferFunc:'Double', size:8},
+    int64:{bufferFunc:'Double', size:8}, 
 */
     
-/* 64bit整数有问题，Buffer未提供处理函数，暂时去掉
-    UInt64:{name:'Double', size:8},
-    uint64:{name:'Double', size:8},
-    Int64:{name:'Double', size:8},
-    int64:{name:'Double', size:8}, 
-*/
+    Float:{bufferFunc:'Float', size:4},
+    float:{bufferFunc:'Float', size:4},
+    Double:{bufferFunc:'Double', size:8},
+    double:{bufferFunc:'Double', size:8},
     
-    Float:{name:'Float', size:4},
-    float:{name:'Float', size:4},
-    Double:{name:'Double', size:8},
-    double:{name:'Double', size:8},
-    
-    //string和fstring（Fixed length string），单独处理，仅仅size无效
-    string:{name:'string', size:0},
-    fstring:{name:'fstring', size:0},
-    buffer:{name:'buffer', size:0}
+    //string and fstring(Fixed length string), size is invalid
+    string:{bufferFunc:'string', size:0},
+    fstring:{bufferFunc:'fstring', size:0},
+    buffer:{bufferFunc:'buffer', size:0}
 };
 
 
@@ -105,7 +98,7 @@ var Writer = function(){
         for(var i=0; i<_targetList.length; i++){
             var item = _targetList[i];
             var typeInfo = item.typeInfo;
-            if(typeInfo.name == 'string'){ //string with 4 bytes length field at beginning
+            if(typeInfo.bufferFunc == 'string'){ //string with 4 bytes length field at beginning
                 len += 4;
             }
             len += item.len;
@@ -119,15 +112,14 @@ var Writer = function(){
             var item = _targetList[i];
             var typeInfo = item.typeInfo;
             var writeFunc;
-            if(typeInfo.name == 'string'){
+            if(typeInfo.bufferFunc == 'string'){
                 //Write string length as UInt32 before string body
-                ret['writeUInt32' + _endian + 'E'](item.len);
+                ret['writeUInt32' + _endian + 'E'](item.len, offset);
                 offset += 4;
                 ret.write(item.data, offset, item.len, _encoding);
-            }else if((typeInfo.name == 'fstring') || (typeInfo.name == 'buffer')){ //fixed length string, 定长字符串，空余部分填0
+            }else if((typeInfo.bufferFunc == 'fstring') || (typeInfo.bufferFunc == 'buffer')){ //fixed length string
                 
-                if(typeInfo.name == 'fstring'){
-                    //tmpBuff = new Buffer(item.data, _encoding);
+                if(typeInfo.bufferFunc == 'fstring'){
                     tmpBuff = Buffer.from(item.data, _encoding);
                 }else{ //buffer
                     tmpBuff = Buffer.from(item.data);
@@ -140,9 +132,9 @@ var Writer = function(){
             }else{
                 
                 if(typeInfo.size == 1) //1 byte data
-                    writeFunc = 'write' + typeInfo.name;
+                    writeFunc = 'write' + typeInfo.bufferFunc;
                 else
-                    writeFunc = 'write' + typeInfo.name + _endian + 'E';
+                    writeFunc = 'write' + typeInfo.bufferFunc + _endian + 'E';
                 //console.log("function name: " + writeFunc);
                 ret[writeFunc](item.data, offset);   
             }
@@ -156,10 +148,12 @@ var Writer = function(){
         _targetList = [];
     };
     
-    //遍历TypeInfos，根据表中的名称，添加所有的名称命名的函数，如UInt16, short等
+    //Traverse TypeInfos, add name as function to this writer object, such as UInt16, short...
     for(var i in TypeInfos){
-        //根据类型名称得到一个匿名函数，函数的作用是以类型名称去调用add，如：
-        //类型名称：'short',得到函数 function(v){ return add("short", v); }
+        //Get a function, this function will call add()
+        //For example, type name is 'short', and the function is: function(v){ return add("short", v); }
+        //Attaching this function to writer object by calling eval() with script: 
+        //  this["short"] = function(v){ return add("short", v); }
         var addFuncScript;
         if((i == 'fstring') || (i == 'buffer')) //Add field function: writer.type(fieldName, len), such as writer.fstring(str, 10);
             addFuncScript = 'this["' + i + '"] = function(v, len){ return add("'+ i +'", v, len ); }'
@@ -191,8 +185,10 @@ var Reader = function(srcBuffer){
         return this;
     };
     
+    //Append a buffer to Reader as source data
     this.append = function(buff){
         _srcBuffer = Buffer.concat([_srcBuffer, buff]);
+        //console.log(_srcBuffer);
         return this;
     };
     
@@ -200,19 +196,19 @@ var Reader = function(srcBuffer){
         return _encoding;
     };
     
-    //指定文字编码
+    //setEncoding() & getEncoding() set/get string encoding mode such as 'utf8', 'ascii', 'hex', 'base64', etc., 
+    //the more detail can reference to nodeJs docment for Buffer: Buffers and Character Encodings.
     this.setEncoding = function(encode){
         _encoding = encode;
         return this;
     };
     
-    //指定字节序 为BigEndian
+    //Set endian format, bigEndian or LittleEndian
     this.bigEndian = function(){
        _endian = 'B';
         return self;
     };
 
-    //指定字节序 为LittleEndian
     this.littleEndian = function(){
        _endian = 'L';
         return self;
@@ -230,13 +226,13 @@ var Reader = function(srcBuffer){
             len = typeInfo.size;
         
         var readFunc;
-        if(typeInfo.name == 'string'){
+        if(typeInfo.bufferFunc == 'string'){
             
             //先读出string长度
-            var strlen = _srcBuffer['readUInt32' + _endian + 'E']();
+            len = _srcBuffer['readUInt32' + _endian + 'E'](_offset);
             _offset += 4;
-            _result[fieldName] = _srcBuffer.toString(_encoding, _offset, _offset + strlen);
-        }else if(typeInfo.name == 'fstring'){ //fixed length string, 定长字符串，空余部分填0
+            _result[fieldName] = _srcBuffer.toString(_encoding, _offset, _offset + len);
+        }else if(typeInfo.bufferFunc == 'fstring'){ //fixed length string, 定长字符串，空余部分填0
                
             var strlen = 0;//Get string bytes length           
             for(var i = _offset; i<_offset +len; i++){
@@ -247,7 +243,7 @@ var Reader = function(srcBuffer){
             }
             
             _result[fieldName] = _srcBuffer.toString(_encoding, _offset, _offset + strlen);
-        }else if(typeInfo.name == 'buffer'){ //buffer, must specify len
+        }else if(typeInfo.bufferFunc == 'buffer'){ //buffer, must specify len
             
             //_result[fieldName] = new Buffer(len);
             _result[fieldName] = Buffer.alloc(len);
@@ -255,9 +251,9 @@ var Reader = function(srcBuffer){
         }else{
             
             if(typeInfo.size == 1) //1 byte data
-                readFunc = 'read' + typeInfo.name;
+                readFunc = 'read' + typeInfo.bufferFunc;
             else
-                readFunc = 'read' + typeInfo.name + _endian + 'E';
+                readFunc = 'read' + typeInfo.bufferFunc + _endian + 'E';
             //console.log("readFunc name: " + readFunc);
             _result[fieldName] = _srcBuffer[readFunc](_offset);   
         }
@@ -271,11 +267,30 @@ var Reader = function(srcBuffer){
         return _result;
     };
     
+    /*!
+    Reader unpack with description table
+    Description table likes as following:
+    var descTable = [
+     {name: 'field0', type: 'uint16'},
+     {name: 'field1', type: 'fstring', length: 10},
+     {name: 'field2', type: 'buffer', length: 10},
+     {name: 'field3', type: 'string'}
+    ];
+    reader.unpackWithDescTable(descTable);
+    */
+    this.unpackWithDescTable = function(descTable){
+        for(var i=0; i<descTable.length; i++){
+            parseField(descTable[i].name, descTable[i].type, descTable[i].length);
+        }
+        return self.unpack();
+    };
     
-    //遍历TypeInfos，根据表中的名称，添加所有的名称命名的函数，如UInt16, short等
+    //Traverse TypeInfos, add name as function to this writer object, such as UInt16, short...
     for(var i in TypeInfos){
-        //根据类型名称得到一个匿名函数，函数的作用是以类型名称去调用add，如：
-        //类型名称：'short',得到函数 function(v){ return parseField("name"); }
+        //Get a function, this function will call add()
+        //For example, type name is 'short', and the function is: function(v){ return parseField(name, "short"); }
+        //Attaching this function to reader object by calling eval() with script: 
+        //  this["short"] = function(v){ return parseField(name, "short"); }
         var addFuncScript;
         if((i == 'fstring') || ( i == "buffer")) //Add field function: reader.type(fieldName, len)
             addFuncScript = 'this["' + i + '"] = function(name, len){ return parseField(name, "'+ i +'", len ); }'
@@ -283,7 +298,6 @@ var Reader = function(srcBuffer){
             addFuncScript = 'this["' + i + '"] = function(name){ return parseField(name, "'+ i +'" ); }'
         eval(addFuncScript); 
     }
-    
 }
 
 function CreateReader(data)

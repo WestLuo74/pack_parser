@@ -11,7 +11,7 @@ console.log();
 
 var pack = writer.string('abc').fstring('1234', 10).pack();
 
-console.log("Pack string('abc').fstring('123456789012345', 10) :");
+console.log("Pack string('abc').fstring('1234', 10) :");
 console.log(pack);
 console.log();
 
@@ -32,20 +32,6 @@ var funclist =
  "short",
  "Int32",
  "int32",
-
-/*Buffer提供的Int编码函数需要带byteLength，应该是作为可变长度的整数的写入，暂时不适应
- "UInt",
- "uint",
- "Int",
- "int",
-*/
-    
-/* 64bit整数有问题，Buffer未提供处理函数，暂时去掉
- "UInt64",
- "uint64",
- "Int64",
- "int64",
-*/
  "Float",
  "float",
  "Double",
@@ -134,4 +120,28 @@ console.log(pack);
 var out = Reader.set(pack).buffer('buffer_name', 10).fstring('fstring_name', 10).bigEndian().unpack();
 console.log(out);
 
+/*
+Test reader unpack with description table
+Description table likes as following:
+var descTable = [
+     {name: 'field0', type: 'uint16'},
+     {name: 'field1', type: 'fstring', length: 10},
+     {name: 'field2', type: 'buffer', length: 10},
+     {name: 'field3', type: 'string'}
+    ];
+reader.unpackWithDescTable(descTable);
+*/
+console.log("=== Reader.unpackWithDescTable");
+var pack = writer.uint16(10).fstring('1234567890123', 10).string('1234567890123').bigEndian().pack();
+var pack2 = writer.uint32(100).bigEndian().pack();
+console.log(pack);
+
+var descTable = [
+     {name: 'field0', type: 'uint16'},
+     {name: 'field1', type: 'fstring', length: 10},
+     {name: 'field3', type: 'string'},
+     {name: 'field4', type: 'uint32'}
+    ];
+var out = Reader.set(pack).append(pack2).bigEndian().unpackWithDescTable(descTable);
+console.log(out);
 
