@@ -16,7 +16,7 @@ Pack_parser pack or unpack nodejs Buffer with specified format, is used to handl
 ###  Create a writer or reader
 Writer is used to packaging data, and reader unpackaging data pack.
 ```js
-var PackParser = require('pack_parse');
+var PackParser = require('pack_parser');
 var writer = PackParser.CreateWriter();
 var Reader = PackParser.CreateReader(pack);
 ```
@@ -62,6 +62,7 @@ Float(), float(),
 Double(), double(),  
 string(),  
 fstring(),
+vbuffer(),
 buffer() .  
 ```
 In these field functions:  
@@ -119,7 +120,10 @@ Output as following:
 < Buffer 31 32 33 34 00 00 00 00 00 00 >
 < Buffer 31 32 33 34 35 36 37 38 39 30 >
 ```
-For writer, if fixedLength is undefined, fixedLength is the string's length(in bytes); and for the the reader, fixedLength must be specified when calling this function.
+For writer, if fixedLength is undefined, fixedLength is the string's length(in bytes); and for the the reader, fixedLength must be specified when calling this function. 
+
+### vbuffer()
+vbuffer() function likes string, it pack/unpack a nodeJs Buffer object with its length into/from result.
 
 ### buffer()
 buffer() function likes fstring(), it pack/unpack a nodeJs Buffer object into/from result.

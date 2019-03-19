@@ -102,22 +102,27 @@ console.log(pack);
 var out = Reader.set(pack).string('str_name').bigEndian().unpack();
 console.log(out);
 
-var testBuff = new Buffer("abcdef");
+var testBuff = Buffer.from("abcdef");
 var pack = writer.buffer(testBuff).fstring('1234').pack();
 console.log(pack);
 var out = Reader.set(pack).buffer('buffer_name', 6).fstring('fstring_name', 4).bigEndian().unpack();
 console.log(out);
 
-var testBuff = new Buffer("abcd");
+var testBuff = Buffer.from("abcd");
 var pack = writer.buffer(testBuff, 10).fstring('1234', 10).pack();
 console.log(pack);
 var out = Reader.set(pack).buffer('buffer_name', 10).fstring('fstring_name', 10).bigEndian().unpack();
 console.log(out);
 
-var testBuff = new Buffer("abcdefghijklmopqrst");
+var testBuff = Buffer.from("abcdefghijklmopqrst");
 var pack = writer.buffer(testBuff, 10).fstring('123456789012345', 10).pack();
 console.log(pack);
 var out = Reader.set(pack).buffer('buffer_name', 10).fstring('fstring_name', 10).bigEndian().unpack();
+console.log(out);
+
+var pack = writer.vbuffer(testBuff).string('123456789012345').pack();
+console.log(pack);
+var out = Reader.set(pack).vbuffer('vbuffer_name').string('string_name').bigEndian().unpack();
 console.log(out);
 
 /*

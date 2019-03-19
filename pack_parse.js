@@ -36,6 +36,7 @@ var TypeInfos={
     //string and fstring(Fixed length string), size is invalid
     string:{bufferFunc:'string', size:0},
     fstring:{bufferFunc:'fstring', size:0},
+    vbuffer:{bufferFunc:'vbuffer', size:0},
     buffer:{bufferFunc:'buffer', size:0}
 };
 
@@ -80,7 +81,7 @@ var Writer = function(){
             
             if(typeName == 'string' || (typeName == 'fstring')){
                 len = Buffer.byteLength(val, _encoding);
-            }else if(typeName == 'buffer'){
+            }else if((typeName == 'buffer') || (typeName == 'vbuffer')){
                 len = val.length;
             }else{
                 len = typeInfo.size;
@@ -98,13 +99,13 @@ var Writer = function(){
         for(var i=0; i<_targetList.length; i++){
             var item = _targetList[i];
             var typeInfo = item.typeInfo;
-            if(typeInfo.bufferFunc == 'string'){ //string with 4 bytes length field at beginning
+            if((typeInfo.bufferFunc == 'string') || (typeInfo.bufferFunc == 'vbuffer')){ //string with 4 bytes length field at beginning
                 len += 4;
             }
             len += item.len;
         }
         
-        var ret = new Buffer(len); //Alloc result
+        var ret = Buffer.alloc(len); //Alloc result
         var offset = 0;
         
         //Package result
@@ -112,11 +113,16 @@ var Writer = function(){
             var item = _targetList[i];
             var typeInfo = item.typeInfo;
             var writeFunc;
+            var tmpBuff;
             if(typeInfo.bufferFunc == 'string'){
                 //Write string length as UInt32 before string body
                 ret['writeUInt32' + _endian + 'E'](item.len, offset);
                 offset += 4;
                 ret.write(item.data, offset, item.len, _encoding);
+            }else if(typeInfo.bufferFunc == 'vbuffer'){
+                ret['writeUInt32' + _endian + 'E'](item.len, offset);
+                offset += 4;
+                item.data.copy(ret, offset, 0);
             }else if((typeInfo.bufferFunc == 'fstring') || (typeInfo.bufferFunc == 'buffer')){ //fixed length string
                 
                 if(typeInfo.bufferFunc == 'fstring'){
@@ -228,7 +234,7 @@ var Reader = function(srcBuffer){
         var readFunc;
         if(typeInfo.bufferFunc == 'string'){
             
-            //先读出string长度
+            //read string length
             len = _srcBuffer['readUInt32' + _endian + 'E'](_offset);
             _offset += 4;
             _result[fieldName] = _srcBuffer.toString(_encoding, _offset, _offset + len);
@@ -243,6 +249,12 @@ var Reader = function(srcBuffer){
             }
             
             _result[fieldName] = _srcBuffer.toString(_encoding, _offset, _offset + strlen);
+        }else if(typeInfo.bufferFunc == 'vbuffer'){
+            //read buffer length
+            len = _srcBuffer['readUInt32' + _endian + 'E'](_offset);
+            _offset += 4;
+            _result[fieldName] = Buffer.alloc(len);
+            _srcBuffer.copy(_result[fieldName], 0, _offset, _offset + len);
         }else if(typeInfo.bufferFunc == 'buffer'){ //buffer, must specify len
             
             //_result[fieldName] = new Buffer(len);
